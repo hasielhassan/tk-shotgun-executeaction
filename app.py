@@ -19,9 +19,6 @@ import traceback
 import tank
 import sys
 import os
-from metacube.PipelineCore.CoreDeadlineTools import DeadlineUtils
-reload (DeadlineUtils)
-
 
 class ExecuteAction(Application):
     
