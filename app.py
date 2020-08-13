@@ -33,47 +33,41 @@ class ExecuteAction(Application):
             "supports_multiple_selection": self.get_setting("supports_multiple_selection")
         }
 
-        if self.get_setting("action_token") != "":
-
-            app_identifier = "execute_action_%s" % self.get_setting("action_token")
-
-        else:
-
-            app_identifier = "execute_action"
+        app_identifier = self.get_setting("display_name")
 
         self.engine.register_command(app_identifier, self.process_action, p)
 
 
-
-    def process_action(self, entity_type, entity_ids):
+    def process_action(self, entity_type=None, entity_ids=None):
         
+        entities = None
 
-        self.log_debug("Processing %s %s" % (len(entity_ids), entity_type))
+        if entity_type and entity_ids:
+            self.log_debug("Processing %s %s" % (len(entity_ids), entity_type))
         
-        if entity_type not in self.get_setting("allowed_entities"):
-            self.log_info("Sorry, this app only works with entities of type %s." % self.get_setting("allowed_entities"))
-            return
+            if entity_type not in self.get_setting("allowed_entities"):
+                self.log_info("Sorry, this app only works with entities of type %s." % self.get_setting("allowed_entities"))
+                return
 
+            entity_fields_dict = self.shotgun.schema_field_read(entity_type)
 
-        entity_fields_dict = self.shotgun.schema_field_read(entity_type)
+            shotgun_fields = []
 
-        shotgun_fields = []
-
-        for field in entity_fields_dict:
-            shotgun_fields.append(field)
-
-        extra_fields = self.get_setting('sg_extended_fields')
-        if entity_type in extra_fields:
-            for field in extra_fields[entity_type]:
+            for field in entity_fields_dict:
                 shotgun_fields.append(field)
 
-        entities = self.shotgun.find(entity_type, [["id", "in", entity_ids]], shotgun_fields)
+            extra_fields = self.get_setting('sg_extended_fields')
+            if entity_type in extra_fields:
+                for field in extra_fields[entity_type]:
+                    shotgun_fields.append(field)
+
+            entities = self.shotgun.find(entity_type, [["id", "in", entity_ids]], shotgun_fields)
 
         try:
             result = self.execute_hook("action_hook", 
-                                         entity_type=entity_type,
-                                         entities=entities,
-                                         other_params=self.get_setting("other_params"))
+                                       entity_type=entity_type,
+                                       entities=entities,
+                                       other_params=self.get_setting("other_params"))
 
         except:
             e = traceback.format_exc()
