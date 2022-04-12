@@ -45,7 +45,7 @@ class ExecuteAction(Application):
 
         if entity_type and entity_ids:
             self.log_debug("Processing {0} {1}" \
-                    .format((len(entity_ids), entity_type)))
+                .format(len(entity_ids), entity_type))
 
             if entity_type not in self.get_setting("allowed_entities"):
                 self.log_info(("Sorry, this app only works with entities "
